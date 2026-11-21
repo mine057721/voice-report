@@ -567,7 +567,7 @@ function metricsList(r, d) {
     { name: "목소리 맑기", cls: by3(p.hnr, ["허스키", "부드러움", "깨끗함"]), val: r.hnr.toFixed(1), unit: "dB", pos: p.hnr, k: "hnr", ends: ["숨소리 많음", "깨끗함"],
       desc: "울림 성분과 숨소리·거친 소리의 비율이에요. 낮을수록 허스키하게 들려요." },
     { name: "말 속도", cls: d.speed, val: r.rate.toFixed(1), unit: "음절/초", pos: p.rate, k: "rate", ends: ["느림", "빠름"],
-      desc: r.usedKnown ? "읽은 문장의 글자 수로 계산했어요. 쉰 시간은 빼고 셌어요." : "소리 마디를 세서 추정했어요. 정확히 재려면 위 문장을 읽어 주세요." },
+      desc: r.usedKnown ? "읽은 문장의 글자 수로 계산했어요. 쉰 시간은 빼고 셌어요." : "소리 마디를 세서 추정했어요. 정확히 재려면 '문장 읽기'로 녹음해 주세요." },
     { name: "말끝 힘", cls: by3(p.endDrop, ["흐려짐", "보통", "또렷함"]), val: (r.endDrop > 0 ? "+" : "") + r.endDrop.toFixed(1), unit: "dB", pos: p.endDrop, k: "endDrop", ends: ["작아짐", "유지"],
       desc: "문장 마지막 부분이 앞부분보다 얼마나 작아지는지예요." },
     { name: "쉼 비율", cls: cls(r.pauseRatio, [0.1, 0.25], ["적음", "보통", "많음"]), val: Math.round(r.pauseRatio * 100), unit: "%", pos: clamp(r.pauseRatio / 0.45 * 100, 0, 100), band: [22, 56], ends: ["0%", "45%"],
