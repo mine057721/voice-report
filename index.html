@@ -32,6 +32,7 @@
 :root[data-theme="dark"] { --paper: #101113; --ink: #ebecef; --muted: #8e929a; --rule: #25272c; --fill: #191a1e; --signal: #ff5547; color-scheme: dark; }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; }
 body { word-break: keep-all; overflow-wrap: break-word; background: var(--paper); color: var(--ink); font: 400 16px/1.65 var(--sans); -webkit-font-smoothing: antialiased; }
 main { max-width: 680px; margin: 0 auto; padding: 0 20px 72px; }
@@ -139,6 +140,9 @@ details .body { display: grid; gap: 10px; padding-top: 12px; font-size: .85rem; 
 .dev.show { display: grid; }
 .dev input[type=text] { font: inherit; padding: 9px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .rec.on i { animation: none; } }
+.scriptbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: -6px; }
+.script.free { border-left-style: dashed; color: var(--muted); }
+.script.free b { color: var(--ink); font-weight: 600; }
 .sharebar { display: flex; flex-wrap: wrap; gap: 10px; }
 .sharebar[hidden] { display: none; }
 .btn { font: 600 .95rem var(--sans); border-radius: 999px; padding: 11px 18px; cursor: pointer; border: 1.5px solid var(--ink); background: var(--ink); color: var(--paper); }
@@ -167,13 +171,18 @@ details .body { display: grid; gap: 10px; padding-top: 12px; font-size: .85rem; 
   </header>
 
   <section aria-labelledby="h1s">
-    <div class="sh"><span class="num">01</span><h2 id="h1s">조용한 곳에서 평소처럼 읽어 주세요</h2></div>
-    <blockquote class="script" id="script">안녕하세요. 오늘은 날씨가 맑아서 산책하기 좋은 날이에요. 저는 아침마다 따뜻한 커피를 마시면서 하루 계획을 세우는 걸 좋아해요. 여러분은 요즘 어떤 하루를 보내고 계신가요?</blockquote>
+    <div class="sh"><span class="num">01</span><h2 id="h1s">조용한 곳에서 평소처럼 말해 주세요</h2></div>
+    <div class="seg" role="group" aria-label="녹음 방식">
+      <button type="button" data-mode="read" aria-pressed="true">문장 읽기</button>
+      <button type="button" data-mode="free" aria-pressed="false">자유롭게 말하기</button>
+    </div>
+    <blockquote class="script" id="script"></blockquote>
+    <div class="scriptbar"><span class="note" id="scriptHint"></span><button type="button" class="textbtn" id="nextScript">다른 문장</button></div>
     <div class="controls">
       <button class="rec ghost" id="recBtn" type="button"><i aria-hidden="true"></i><span>녹음 시작</span></button>
       <label class="textbtn" for="fileIn">녹음 파일로 분석하기<input id="fileIn" type="file" accept="audio/*,video/*"></label>
     </div>
-    <label class="check"><input type="checkbox" id="readScript" checked> 위 문장을 그대로 읽은 녹음이에요. 체크하면 말 속도를 정확하게 계산해요.</label>
+    <label class="check" id="readScriptRow"><input type="checkbox" id="readScript" checked> 위 문장을 그대로 읽은 녹음이에요. 체크하면 말 속도를 정확하게 계산해요.</label>
     <p class="ready" id="ready">아직 녹음이 없어요</p>
     <div class="gorow">
       <button class="go" id="goBtn" type="button" disabled>분석하기</button>
@@ -474,7 +483,40 @@ const CONTACT = "drofdgn@gmail.com";     // 운영자 연락처(이메일)
 const SB_ON = !!(SB_URL && SB_KEY);
 
 const $ = id => document.getElementById(id);
-const SCRIPT_SYL = ($("script").textContent.match(/[가-힣]/g) || []).length;
+const SCRIPTS = [
+  "안녕하세요. 오늘은 날씨가 맑아서 산책하기 좋은 날이에요. 저는 아침마다 따뜻한 커피를 마시면서 하루 계획을 세우는 걸 좋아해요. 여러분은 요즘 어떤 하루를 보내고 계신가요?",
+  "주말에는 친구들과 바닷가에 다녀왔어요. 파도 소리를 들으면서 걷다 보니 마음이 편안해지더라고요. 다음에는 가족들과 함께 가 보고 싶어요. 여러분은 바다와 산 중에 어디가 더 좋으세요?",
+  "요즘 새로운 취미로 그림을 배우고 있어요. 처음에는 선 하나 긋는 것도 어려웠는데, 이제는 조금씩 익숙해지고 있어요. 꾸준히 하다 보면 언젠가 멋진 작품을 그릴 수 있겠죠?",
+  "오늘 점심에는 따뜻한 국수를 먹었어요. 비가 오는 날에는 이상하게 국물 요리가 생각나더라고요. 저녁에는 무엇을 먹을지 벌써부터 고민이에요. 혹시 추천해 줄 메뉴가 있나요?",
+  "아침에 일어나서 창문을 열었더니 공기가 정말 상쾌했어요. 잠깐 산책을 하고 돌아와서 책을 몇 쪽 읽었어요. 이렇게 하루를 시작하면 기분이 좋아요. 여러분의 아침은 어떤가요?",
+  "어제는 오랜만에 영화관에 다녀왔어요. 큰 화면으로 보니까 집에서 볼 때보다 훨씬 몰입이 잘 되더라고요. 끝나고 나서도 한참 동안 장면들이 떠올랐어요. 최근에 재미있게 본 영화가 있으신가요?",
+  "지하철을 타고 가다가 창밖으로 노을을 봤어요. 하늘이 주황색과 보라색으로 물들어서 정말 예뻤어요. 사진을 찍고 싶었는데 금방 터널로 들어가 버렸어요. 그래도 오래 기억에 남을 것 같아요.",
+  "다음 달에는 처음으로 혼자 여행을 떠나 보려고 해요. 조금 걱정되기도 하지만 설레는 마음이 더 커요. 가고 싶은 곳을 정리하면서 계획을 세우고 있어요. 혼자 여행해 본 적 있으세요?",
+  "우리 동네에는 오래된 빵집이 하나 있어요. 문을 열고 들어가면 고소한 냄새가 가득해서 늘 뭔가를 사게 돼요. 사장님이 항상 웃으면서 인사해 주셔서 기분이 좋아져요. 여러분 동네에도 단골집이 있나요?",
+  "시험이 끝나고 나니까 갑자기 시간이 많아진 것 같아요. 그동안 미뤄 둔 게임도 하고 방 정리도 하려고요. 막상 쉬려고 하니까 뭘 먼저 해야 할지 모르겠어요. 여러분은 쉬는 날에 주로 뭘 하세요?"
+];
+const TOPICS = ["오늘 하루 있었던 일", "요즘 푹 빠져 있는 것", "최근에 먹은 맛있는 음식", "가 보고 싶은 여행지", "좋아하는 노래나 영화", "어릴 때 기억나는 일", "주말에 하고 싶은 일", "요즘 고민하고 있는 것"];
+let mode = "read", scriptIdx = Math.floor(Math.random() * SCRIPTS.length), topicIdx = Math.floor(Math.random() * TOPICS.length);
+const scriptSyl = () => (SCRIPTS[scriptIdx].match(/[가-힣]/g) || []).length;
+function showScript() {
+  const s = $("script");
+  if (mode === "read") {
+    s.classList.remove("free"); s.textContent = SCRIPTS[scriptIdx];
+    $("scriptHint").textContent = `${scriptIdx + 1} / ${SCRIPTS.length}`; $("nextScript").textContent = "다른 문장";
+  } else {
+    s.classList.add("free"); s.innerHTML = `<b>${TOPICS[topicIdx]}</b>에 대해 10초 이상 편하게 말해 주세요. 다른 이야기를 해도 괜찮아요.`;
+    $("scriptHint").textContent = "말 속도는 추정값으로 나와요"; $("nextScript").textContent = "다른 주제";
+  }
+  $("readScriptRow").hidden = mode !== "read";
+}
+$("nextScript").addEventListener("click", () => { if (mode === "read") scriptIdx = (scriptIdx + 1) % SCRIPTS.length; else topicIdx = (topicIdx + 1) % TOPICS.length; showScript(); });
+document.querySelectorAll("[data-mode]").forEach(b => b.addEventListener("click", () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll("[data-mode]").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  if (mode === "read") $("readScript").checked = true;
+  showScript();
+}));
+showScript();
 let result = null, isExample = true, gender = "auto", lastPcm = null, USERS = [];
 
 const EXAMPLE = {
@@ -618,7 +660,7 @@ async function analyzeBlob(blob) {
     const rendered = await off.startRendering();
     await new Promise(r => setTimeout(r, 30));
     lastPcm = rendered.getChannelData(0);
-    result = analyzeVoice(lastPcm, $("readScript").checked ? SCRIPT_SYL : 0); isExample = false;
+    result = analyzeVoice(lastPcm, mode === "read" && $("readScript").checked ? scriptSyl() : 0); isExample = false;
     const pl = $("player"); if (pl.src) URL.revokeObjectURL(pl.src); pl.src = URL.createObjectURL(blob); pl.hidden = false;
     render();
     setStatus(`분석했어요. 총평 아래에서 내 녹음을 다시 들어 볼 수 있어요.${decoded.duration > 45 ? " 앞 45초만 분석했어요." : ""}`);
@@ -840,7 +882,7 @@ $("recBtn").addEventListener("click", async () => {
     chunks = []; rec = new MediaRecorder(stream);
     rec.ondataavailable = e => e.data.size && chunks.push(e.data);
     rec.onstop = () => { clearInterval(timer); stream.getTracks().forEach(t => t.stop()); btn.classList.remove("on"); label.textContent = "다시 녹음"; setPending(new Blob(chunks, { type: rec.mimeType }), `녹음 준비됨: ${recSec}초`); setStatus(""); };
-    rec.start(); $("readScript").checked = true; btn.classList.add("on"); label.textContent = "녹음 끝내기";
+    rec.start(); if (mode === "read") $("readScript").checked = true; btn.classList.add("on"); label.textContent = "녹음 끝내기";
     recSec = 0; setPending(null); setStatus("녹음 중 · 0초");
     timer = setInterval(() => { recSec++; setStatus(`녹음 중 · ${recSec}초`); if (recSec >= 40) rec.stop(); }, 1000);
   } catch (e) {
@@ -848,9 +890,9 @@ $("recBtn").addEventListener("click", async () => {
   }
 });
 
-document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+document.querySelectorAll("[data-g]").forEach(b => b.addEventListener("click", () => {
   gender = b.dataset.g;
-  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  document.querySelectorAll("[data-g]").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
   render();
 }));
 
