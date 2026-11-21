@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>소개·문의 · 나목소리</title>
+<meta name="description" content="나목소리 소개, 비교 데이터 출처, 문의처.">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3474797799207434" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --paper:#fff; --ink:#141518; --muted:#6c6f77; --rule:#e4e5e8; --fill:#f4f4f6; --signal:#e2382c;
+  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace; color-scheme:light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper:#101113; --ink:#ebecef; --muted:#8e929a; --rule:#25272c; --fill:#191a1e; --signal:#ff5547; color-scheme:dark; } }
+:root[data-theme="dark"] { --paper:#101113; --ink:#ebecef; --muted:#8e929a; --rule:#25272c; --fill:#191a1e; --signal:#ff5547; color-scheme:dark; }
+* { box-sizing:border-box; } html,body { margin:0; }
+body { background:var(--paper); color:var(--ink); font:400 16px/1.8 var(--sans); word-break:keep-all; overflow-wrap:break-word; -webkit-font-smoothing:antialiased; }
+main { max-width:680px; margin:0 auto; padding:0 20px 72px; }
+.top { display:flex; justify-content:space-between; align-items:center; padding:18px 0; border-bottom:1px solid var(--ink); font-size:.8rem; }
+.mark { font-weight:700; display:flex; align-items:center; gap:8px; color:inherit; text-decoration:none; }
+.mark i { width:8px; height:8px; border-radius:50%; background:var(--signal); display:inline-block; }
+.top .num { font-family:var(--mono); color:var(--muted); }
+nav.sub { display:flex; flex-wrap:wrap; gap:6px 16px; padding:12px 0; font-size:.85rem; border-bottom:1px solid var(--rule); }
+nav.sub a { color:var(--muted); text-decoration:none; } nav.sub a[aria-current] { color:var(--ink); font-weight:600; }
+h1 { font-size:clamp(1.7rem,6vw,2.3rem); line-height:1.2; letter-spacing:-.03em; margin:40px 0 12px; text-wrap:balance; }
+.lede { color:var(--muted); margin:0 0 28px; }
+h2 { font-size:1.15rem; letter-spacing:-.01em; margin:36px 0 8px; padding-top:20px; border-top:1px solid var(--rule); }
+h3 { font-size:1rem; margin:22px 0 4px; }
+p { margin:0 0 14px; } ul,ol { margin:0 0 14px; padding-left:1.2em; } li { margin-bottom:6px; }
+a { color:inherit; text-underline-offset:3px; }
+.k { font-family:var(--mono); font-size:.9em; }
+table { width:100%; border-collapse:collapse; font-size:.9rem; margin:0 0 16px; }
+th,td { text-align:left; vertical-align:top; padding:10px 8px; border-bottom:1px solid var(--rule); } th { font-weight:600; white-space:nowrap; }
+.wrap { overflow-x:auto; }
+.cta { display:inline-block; margin:24px 0 0; padding:13px 22px; border-radius:999px; background:var(--ink); color:var(--paper); text-decoration:none; font-weight:600; }
+footer { margin-top:56px; padding-top:18px; border-top:1px solid var(--ink); font-size:.8rem; color:var(--muted); display:grid; gap:8px; }
+footer nav { display:flex; flex-wrap:wrap; gap:6px 14px; } footer a { color:var(--muted); }
+:focus-visible { outline:2px solid var(--signal); outline-offset:3px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><a class="mark" href="index.html"><i aria-hidden="true"></i>나목소리</a><span class="num">NAMOKSORI.COM</span></div>
+  <nav class="sub" aria-label="사이트 메뉴"><a href="index.html">분석하기</a><a href="guide.html">지표 읽는 법</a><a href="why.html">녹음 목소리가 낯선 이유</a><a href="about.html" aria-current="page">소개·문의</a><a href="privacy.html">개인정보처리방침</a></nav>
+  <article>
+
+<h1>나목소리 소개</h1>
+<p class="lede">나목소리는 남들이 듣는 내 목소리를 숫자로 보여주는 무료 웹 도구예요.</p>
+
+<h2>무엇을 하나요</h2>
+<p>짧은 문장 하나를 읽으면 음높이, 억양, 음색 밝기, 맑기, 말 속도 같은 지표를 계산하고, 같은 성별의 한국어 낭독 음성 206명과 비교해 내 위치를 보여줘요. 측정값이 가장 가까운 목소리도 찾아서 직접 들어볼 수 있어요.</p>
+
+<h2>어떻게 만들었나요</h2>
+<p>분석은 모두 지금 쓰고 있는 브라우저 안에서 이루어져요. 녹음은 따로 공개를 선택하지 않는 한 서버로 전송되지 않아요. 비교 기준은 공개 라이선스로 배포된 두 음성 데이터를 같은 방식으로 분석해 만들었어요.</p>
+<ul>
+<li><a href="https://www.openslr.org/40/">Zeroth-Korean</a> · Lucas Jo(Atlas Guide), Wonkyum Lee(Gridspace) · <a href="https://creativecommons.org/licenses/by/4.0/deed.ko">CC BY 4.0</a>. 화자별로 문장 일부를 골라 앞뒤 무음을 자르고 이어 붙여 수치를 측정했고, 샘플은 앞부분 몇 초를 잘라 음량을 맞추고 MP3로 압축했어요.</li>
+<li><a href="https://commonvoice.mozilla.org/ko">Mozilla Common Voice</a> 한국어 · <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.ko">CC0 1.0</a>. 같은 방식으로 가공했어요. 녹음한 사람의 신원을 알아내려 하지 말아 주세요.</li>
+</ul>
+<p>데이터 제공자는 이 사이트를 후원하거나 보증하지 않아요.</p>
+
+<h2>결과를 볼 때</h2>
+<p>결과는 재미와 참고를 위한 것이에요. 의학적 진단이 아니고, 성격이나 능력을 평가하지도 않아요. 마이크와 주변 소음에 따라 결과가 달라질 수 있어요. 지표가 각각 무엇을 뜻하는지는 <a href="guide.html">지표 읽는 법</a>에 정리해 두었어요.</p>
+
+<h2>문의</h2>
+<p>오류 제보, 제안, 공개 기록 삭제 요청은 아래 이메일로 보내 주세요. 공개 기록 삭제를 요청할 때는 공개할 때 받은 삭제 코드를 함께 보내 주시면 빠르게 처리할 수 있어요.</p>
+<p class="k"><a href="mailto:drofdgn@gmail.com">drofdgn@gmail.com</a></p>
+
+<a class="cta" href="index.html">내 목소리 분석하러 가기</a>
+
+  </article>
+  <footer>
+    <nav aria-label="하단 메뉴"><a href="index.html">분석하기</a><a href="guide.html">지표 읽는 법</a><a href="why.html">녹음 목소리가 낯선 이유</a><a href="about.html" aria-current="page">소개·문의</a><a href="privacy.html">개인정보처리방침</a></nav>
+    <span>문의 · drofdgn@gmail.com</span>
+    <span>© 2026 나목소리. 비교 데이터: Zeroth-Korean(CC BY 4.0), Mozilla Common Voice(CC0).</span>
+  </footer>
+</main>
+</body>
+</html>
