@@ -139,6 +139,13 @@ details .body { display: grid; gap: 10px; padding-top: 12px; font-size: .85rem; 
 .dev.show { display: grid; }
 .dev input[type=text] { font: inherit; padding: 9px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .rec.on i { animation: none; } }
+.sharebar { display: flex; flex-wrap: wrap; gap: 10px; }
+.sharebar[hidden] { display: none; }
+.btn { font: 600 .95rem var(--sans); border-radius: 999px; padding: 11px 18px; cursor: pointer; border: 1.5px solid var(--ink); background: var(--ink); color: var(--paper); }
+.btn.line { background: var(--paper); color: var(--ink); }
+.btn[disabled] { opacity: .5; cursor: default; }
+.report { font: 400 .78rem var(--sans); color: var(--muted); background: none; border: 0; padding: 4px 0 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.report.yes { color: var(--signal); }
 .agree { display: none; }
 .agree.show { display: flex; }
 .mine { display: none; font-size: .88rem; border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; gap: 8px; }
@@ -189,6 +196,11 @@ details .body { display: grid; gap: 10px; padding-top: 12px; font-size: .85rem; 
     <div class="sh"><span class="num">03</span><h2 id="h2s">한 줄 총평</h2><span class="tag" id="exampleTag">예시 결과</span></div>
     <p class="summary" id="summary"></p>
     <div class="stats" id="stats"></div>
+    <div class="sharebar" id="shareBar" hidden>
+      <button type="button" class="btn" id="saveCard">결과 이미지 저장</button>
+      <button type="button" class="btn line" id="sendLink">친구한테 보내기</button>
+    </div>
+    <p class="status" id="shareStatus" role="status"></p>
     <div class="basis"><span>같은 성별 기준으로 비교해요</span>
       <div class="seg" role="group" aria-label="비교 기준">
         <button type="button" data-g="auto" aria-pressed="true">자동</button>
@@ -226,8 +238,9 @@ details .body { display: grid; gap: 10px; padding-top: 12px; font-size: .85rem; 
         <p><strong>공개를 선택하면 보관하는 항목</strong> · 결과만 공개: 측정값 6가지(음높이, 억양, 음색 밝기, 맑기, 말 속도, 비교 기준 성별)와 공개 시각. 녹음 공개: 여기에 더해 녹음 앞부분 최대 10초(압축한 MP3). 이름, 연락처, 계정 같은 정보는 받지 않아요.</p>
         <p><strong>목적</strong> · 다른 이용자의 '나와 비슷한 목소리' 비교와 듣기.</p>
         <p><strong>누가 볼 수 있나요</strong> · 이 사이트를 쓰는 누구나 '이용자 ○○○○'라는 임의 번호로 볼 수 있어요.</p>
-        <p><strong>보관 기간과 삭제</strong> · 직접 지울 때까지 보관해요. 공개한 기기에서는 '내 공개 기록 지우기'로, 다른 기기에서는 공개할 때 받은 삭제 코드로 언제든 지울 수 있어요. 지우면 측정값과 녹음이 모두 바로 삭제돼요.</p>
+        <p><strong>보관 기간과 삭제</strong> · 직접 지울 때까지 보관해요. 같은 기기에서 새로 공개하면 전에 공개한 기록은 자동으로 지워져요. 공개한 기기에서는 '내 공개 기록 지우기'로, 다른 기기에서는 공개할 때 받은 삭제 코드로 언제든 지울 수 있어요. 지우면 측정값과 녹음이 모두 바로 삭제돼요.</p>
         <p><strong>저장 위탁</strong> · Supabase Inc.(미국)의 서비스를 이용하고, 데이터는 서울 지역 서버에 저장돼요. 서버 운영사가 보안을 위해 접속 기록(IP 주소 등)을 일정 기간 남길 수 있어요.</p>
+        <p><strong>신고와 남용 방지</strong> · 부적절한 녹음은 '신고'를 누를 수 있고, 서로 다른 3명 이상이 신고하면 자동으로 숨겨져요. 같은 사람이 너무 자주 공개하거나 신고하지 못하도록, 접속 IP 주소를 되돌릴 수 없게 변환한 값(해시)을 최대 24시간 보관해요.</p>
         <p><strong>만 14세 미만</strong>은 공개 기능을 쓸 수 없어요. 분석은 공개 없이 이용할 수 있어요.</p>
         <p>광고가 표시될 때는 Google이 광고 쿠키를 쓸 수 있어요. 전체 내용은 <a href="privacy.html">개인정보처리방침</a>에 있어요.</p>
         <p id="contactLine"></p>
@@ -533,7 +546,7 @@ function similar(r, g) {
     diff.forEach((z, j) => d2 += w[j] * z * z);
     const close = diff.map((z, j) => [Math.abs(z), j]).sort((a, b) => a[0] - b[0]);
     const far = close[close.length - 1];
-    return { id: s[0], label: s[8] ? `이용자 ${s[0].slice(0, 4).toUpperCase()}` : `화자 ${s[0]}`, audio: s[8] ? s[7] : CLIPS[s[0]], sim: Math.round(100 * Math.exp(-d2 / 4)), same: names[close[0][1]] + "·" + names[close[1][1]] + " 비슷",
+    return { id: s[0], user: !!s[8], label: s[8] ? `이용자 ${s[0].slice(0, 4).toUpperCase()}` : `화자 ${s[0]}`, audio: s[8] ? s[7] : CLIPS[s[0]], sim: Math.round(100 * Math.exp(-d2 / 4)), same: names[close[0][1]] + "·" + names[close[1][1]] + " 비슷",
       far: far[0] > 1 ? `${names[far[1]]}${josa(names[far[1]])} ${diff[far[1]] > 0 ? "내가 더 높음" : "상대가 더 높음"}` : "전반적으로 비슷" };
   }).sort((a, b) => b.sim - a.sim).slice(0, 3);
 }
@@ -543,7 +556,7 @@ const STOP = '<svg viewBox="0 0 14 14" aria-hidden="true"><rect x="2.5" y="2.5" 
 
 function render() {
   const r = result || EXAMPLE, d = describe(r);
-  $("exampleTag").hidden = !isExample; $("exampleTag2").hidden = !isExample;
+  $("exampleTag").hidden = !isExample; $("shareBar").hidden = isExample; $("exampleTag2").hidden = !isExample;
   $("summary").textContent = `${d.line}. ${d.sub}이에요.`;
   const st = [
     ["음높이", Math.round(r.f0), "Hz"], ["음색 밝기", Math.round(r.brightness), "/ 100"],
@@ -562,7 +575,7 @@ function render() {
     </div>`; }).join("");
   $("simList").innerHTML = similar(r, d.g).map((s, i) => `<li class="sim">
       <span class="n">${String(i + 1).padStart(2, "0")}</span>
-      <span><span class="who">${s.label}</span><br><span class="why">${s.same} · ${s.far}</span></span>
+      <span><span class="who">${s.label}</span><br><span class="why">${s.same} · ${s.far}</span>${s.user ? (reported.has(s.id) ? '<br><span class="report">신고했어요</span>' : `<br><button type="button" class="report" data-report="${s.id}">신고</button>`) : ""}</span>
       <span class="pct">${s.sim}%</span>
       ${s.audio ? `<button type="button" class="play" data-src="${s.audio.startsWith("data:") ? "clip:" + s.id : s.audio}" aria-pressed="false" aria-label="${s.label} 목소리 듣기">${PLAY}</button>` : '<span class="priv">녹음<br>비공개</span>'}
     </li>`).join("");
@@ -681,20 +694,22 @@ async function shareResult(r) {
   setStatus(withVoice ? "녹음과 결과를 공개하고 있어요…" : "결과를 공개하고 있어요…");
   try {
     const id = uuid(), token = randHex(16), hash = await sha256hex(token);
-    let audio_path = null;
-    if (withVoice) {
-      const mp3 = await encodeMp3(lastPcm);
-      await sb(`/storage/v1/object/voices/${id}.mp3`, { method: "POST", headers: { "Content-Type": "audio/mpeg", "x-upsert": "false" }, body: mp3 });
-      audio_path = id + ".mp3";
-    }
+    const mp3 = withVoice ? await encodeMp3(lastPcm) : null;
+    const audio_path = withVoice ? id + ".mp3" : null;
     const row = { id, gender: d.g, f0: +r.f0.toFixed(1), intonation: +r.intonation.toFixed(2), brightness: +r.brightness.toFixed(1), hnr: +r.hnr.toFixed(2), rate: +r.rate.toFixed(2), used_script: !!r.usedKnown, audio_path, delete_hash: hash };
     await sb("/rest/v1/voices", { method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify(row) });
-    const mine = loadMine(); mine.push({ id, token, voice: !!audio_path, at: Date.now() }); saveMine(mine);
-    setStatus(withVoice ? "녹음과 결과를 공개했어요." : "결과를 공개했어요. 녹음은 공개하지 않았어요.");
+    if (withVoice) {
+      try { await sb(`/storage/v1/object/voices/${id}.mp3`, { method: "POST", headers: { "Content-Type": "audio/mpeg", "x-upsert": "false" }, body: mp3 }); }
+      catch (e) { try { await deleteShare(id, token); } catch {} throw e; }
+    }
+    const old = loadMine(); saveMine([{ id, token, voice: !!audio_path, at: Date.now() }].concat(old));
+    let removed = 0; for (const m of old) { try { await deleteShare(m.id, m.token); removed++; } catch {} }
+    setStatus((withVoice ? "녹음과 결과를 공개했어요." : "결과를 공개했어요. 녹음은 공개하지 않았어요.") + (removed ? " 이 기기에서 전에 공개한 기록은 지웠어요." : ""));
     renderMine(`${id}.${token}`);
     loadUsers();
   } catch (e) {
-    setStatus("공개하지 못했어요. 분석 결과는 그대로 볼 수 있어요. 인터넷 연결을 확인하고 다시 분석해 주세요.", true);
+    const limited = /rate_limited/.test(String(e && e.message));
+    setStatus(limited ? "짧은 시간에 너무 많이 공개했어요. 한 시간쯤 뒤에 다시 시도해 주세요. 분석 결과는 그대로 볼 수 있어요." : "공개하지 못했어요. 분석 결과는 그대로 볼 수 있어요. 인터넷 연결을 확인하고 다시 분석해 주세요.", true);
   }
 }
 
@@ -709,9 +724,9 @@ function renderMine(newCode) {
   const box = $("mine"), mine = loadMine();
   if (!SB_ON || !mine.length) { box.classList.remove("show"); box.innerHTML = ""; return; }
   box.classList.add("show");
-  box.innerHTML = `<span>이 기기에서 공개한 기록 <span class="num">${mine.length}</span>개</span>` +
+  box.innerHTML = `<span>이 기기에서 공개 중인 기록 <span class="num">${mine.length}</span>개</span>` +
     (newCode ? `<span class="note">다른 기기에서 지우려면 이 삭제 코드를 따로 보관해 주세요.</span><code id="newCode">${newCode}</code>` : "") +
-    `<span class="acts">${newCode ? '<button type="button" class="textbtn" id="copyCode">삭제 코드 복사</button>' : ""}<button type="button" class="textbtn" id="delMine">내 공개 기록 모두 지우기</button></span>`;
+    `<span class="acts">${newCode ? '<button type="button" class="textbtn" id="copyCode">삭제 코드 복사</button>' : ""}<button type="button" class="textbtn" id="delMine">내 공개 기록 지우기</button></span>`;
   if (newCode) $("copyCode").onclick = async () => { try { await navigator.clipboard.writeText(newCode); $("copyCode").textContent = "복사했어요"; } catch { $("copyCode").textContent = "길게 눌러 직접 복사해 주세요"; } };
   $("delMine").onclick = async () => {
     $("delMine").disabled = true;
@@ -720,6 +735,87 @@ function renderMine(newCode) {
     renderMine(); loadUsers();
   };
 }
+
+/* ===== 신고 ===== */
+let reported = new Set(); try { reported = new Set(JSON.parse(localStorage.getItem("vr_reported") || "[]")); } catch {}
+$("simList").addEventListener("click", async e => {
+  const b = e.target.closest("[data-report]"); if (!b || !SB_ON) return;
+  if (!b.classList.contains("yes")) { b.classList.add("yes"); b.textContent = "부적절한 녹음인가요? 한 번 더 누르면 신고돼요"; return; }
+  b.disabled = true;
+  try {
+    await sb("/rest/v1/rpc/report_voice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p_id: b.dataset.report }) });
+    reported.add(b.dataset.report); try { localStorage.setItem("vr_reported", JSON.stringify([...reported])); } catch {}
+    b.textContent = "신고했어요. 여러 명이 신고하면 자동으로 숨겨져요.";
+  } catch (err) {
+    b.disabled = false; b.textContent = /rate_limited/.test(String(err && err.message)) ? "신고를 너무 많이 했어요. 나중에 다시 해 주세요." : "신고하지 못했어요. 다시 눌러 주세요.";
+  }
+});
+
+/* ===== 결과 공유 ===== */
+function shareText() { const d = describe(result || EXAMPLE); return `내 목소리는 "${d.line}"래 ㅋㅋ 너도 해봐`; }
+function wrapLines(g, text, maxW) {
+  const words = text.split(" "), lines = []; let cur = "";
+  for (const w of words) { const t = cur ? cur + " " + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur); return lines;
+}
+async function makeCard() {
+  const r = result, d = describe(r), top = similar(r, d.g)[0];
+  try { await Promise.all(["700 80px 'IBM Plex Sans KR'", "500 40px 'IBM Plex Sans KR'", "500 72px 'IBM Plex Mono'"].map(f => document.fonts.load(f))); } catch {}
+  const W = 1080, H = 1920, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d"), INK = "#141518", MUTED = "#6c6f77", RULE = "#e4e5e8", RED = "#e2382c", SANS = "'IBM Plex Sans KR', sans-serif", MONO = "'IBM Plex Mono', monospace", L = 96;
+  g.fillStyle = "#ffffff"; g.fillRect(0, 0, W, H);
+  g.fillStyle = RED; g.beginPath(); g.arc(L + 14, 150, 14, 0, Math.PI * 2); g.fill();
+  g.fillStyle = INK; g.font = `700 44px ${SANS}`; g.textBaseline = "middle"; g.fillText("나목소리", L + 46, 152);
+  g.fillStyle = INK; g.fillRect(L, 215, W - L * 2, 3);
+  g.textBaseline = "alphabetic"; g.fillStyle = MUTED; g.font = `500 44px ${SANS}`; g.fillText("남들이 듣는 내 목소리는", L, 340);
+  g.fillStyle = INK; g.font = `700 92px ${SANS}`;
+  let y = 465; for (const ln of wrapLines(g, d.line, W - L * 2).slice(0, 3)) { g.fillText(ln, L, y); y += 122; }
+  g.fillStyle = MUTED; g.font = `500 48px ${SANS}`; g.fillText(d.sub + "이에요", L, y + 10);
+  y += 100; g.fillStyle = RULE; g.fillRect(L, y, W - L * 2, 2);
+  const stats = [["음높이", Math.round(r.f0), "Hz"], ["음색 밝기", Math.round(r.brightness), "/100"], ["맑기", r.hnr.toFixed(1), "dB"], ["말 속도", r.rate.toFixed(1), "음절/초"]];
+  const cw = (W - L * 2) / 2;
+  stats.forEach((s, i) => {
+    const x = L + (i % 2) * cw, yy = y + 85 + Math.floor(i / 2) * 205;
+    g.fillStyle = MUTED; g.font = `500 40px ${SANS}`; g.fillText(s[0], x, yy);
+    g.fillStyle = INK; g.font = `500 100px ${MONO}`; g.fillText(String(s[1]), x, yy + 110);
+    const vw = g.measureText(String(s[1])).width; g.fillStyle = MUTED; g.font = `500 38px ${SANS}`; g.fillText(s[2], x + vw + 14, yy + 110);
+  });
+  y += 85 + 205 + 170; g.fillStyle = RULE; g.fillRect(L, y, W - L * 2, 2);
+  if (top) {
+    g.fillStyle = MUTED; g.font = `500 40px ${SANS}`; g.fillText("나와 가장 비슷한 목소리", L, y + 90);
+    g.fillStyle = INK; g.font = `700 64px ${SANS}`; g.fillText(top.label, L, y + 175);
+    g.fillStyle = RED; g.font = `500 64px ${MONO}`; const t = top.sim + "%"; g.fillText(t, W - L - g.measureText(t).width, y + 175);
+  }
+  g.fillStyle = INK; g.fillRect(L, H - 250, W - L * 2, 3);
+  g.fillStyle = INK; g.font = `700 64px ${SANS}`; g.fillText("namoksori.com", L, H - 150);
+  g.fillStyle = MUTED; g.font = `500 40px ${SANS}`; g.fillText("문장 하나 읽고 내 목소리 분석해 보기", L, H - 85);
+  return new Promise(res => c.toBlob(res, "image/png"));
+}
+function shareMsg(t, err) { const s = $("shareStatus"); s.textContent = t; s.classList.toggle("err", !!err); }
+$("saveCard").addEventListener("click", async () => {
+  if (!result) return;
+  $("saveCard").disabled = true; shareMsg("이미지를 만들고 있어요…");
+  try {
+    const blob = await makeCard(), file = new File([blob], "namoksori.png", { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], text: shareText() + " namoksori.com" }); shareMsg(""); }
+      catch (e) { if (e && e.name !== "AbortError") throw e; shareMsg(""); }
+    } else {
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "namoksori.png"; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000); shareMsg("이미지를 저장했어요. 스토리나 단톡방에 올려 보세요.");
+    }
+  } catch (e) { shareMsg("이미지를 만들지 못했어요. 다시 눌러 주세요.", true); }
+  $("saveCard").disabled = false;
+});
+$("sendLink").addEventListener("click", async () => {
+  const text = shareText(), url = "https://namoksori.com";
+  if (navigator.share) {
+    try { await navigator.share({ title: "나목소리", text, url }); shareMsg(""); return; }
+    catch (e) { if (e && e.name === "AbortError") return; }
+  }
+  try { await navigator.clipboard.writeText(`${text} ${url}`); shareMsg("링크를 복사했어요. 친구한테 붙여넣어 보내 주세요."); }
+  catch { shareMsg(`${text} ${url}`); }
+});
 
 $("delByCode").addEventListener("click", async () => {
   const v = $("delCode").value.trim(), m = v.match(/^([0-9a-f-]{36})\.([0-9a-f]{32})$/i);
@@ -730,7 +826,7 @@ $("delByCode").addEventListener("click", async () => {
 
 if (SB_ON) {
   $("privOn").hidden = false; $("privOff").hidden = true;
-  $("shareNote").textContent = "체크한 항목만 분석이 끝난 뒤 공개돼요. 둘 다 끄면 아무것도 전송되지 않고, 녹음은 이 기기 안에서만 분석돼요. 다른 사람의 목소리는 그 사람이 동의한 경우에만 분석해 주세요.";
+  $("shareNote").textContent = "체크한 항목만 분석이 끝난 뒤 공개되고, 이 기기에서 전에 공개한 기록은 자동으로 지워져요. 둘 다 끄면 아무것도 전송되지 않고, 녹음은 이 기기 안에서만 분석돼요. 다른 사람의 목소리는 그 사람이 동의한 경우에만 분석해 주세요.";
   $("contactLine").innerHTML = CONTACT ? `<strong>문의와 삭제 요청</strong> · ${CONTACT.replace(/[<>&]/g, "")}` : "";
   renderMine(); loadUsers();
 }
